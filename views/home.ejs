@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOME</title>
+    <link
+      rel="stylesheet"
+      href="https://bootswatch.com/4/slate/bootstrap.min.css"
+    />
+  </head>
+  <body>
+
+    <div class="container" style="padding: 20px">
+      <div class="col-md-6 m-auto">
+        <div class="card card-body">
+          <h1 class="text-center mb-3">
+    <h1 class="mt-4">Points of Interest </h1>
+
+    <!--you are logged in as-->
+    <h2>successfully logged on as <%= user.username %></h2>
+
+    <!--object promise-->
+
+    <!-- You access the result of a promise by using the .then method (or using await in an async function) -->
+    <div>
+      <a href="/add/" class="btn btn-primary btn-lg">Add a POI</a>
+
+      <a href="/search" class="btn btn-primary btn-lg">Search POI's</a>
+
+      <button id="logoutButton" class="btn btn-primary btn-lg">Logout</button> 
+    </div>
+    <script>
+
+let logoutButton = document.getElementById('logoutButton')
+  async function logout(event){
+
+    event.preventDefault();
+    
+         const response = await fetch("/users/logout", {
+        method: "POST", headers: { "Content-type": "application/json" },
+      
+      });
+      
+      if(response.status == 200){
+        window.location.href = "/?logout=true"
+        //location.reload();
+      }
+   else if(response.status == 404) {
+        alert("error message: API issue ");
+    } 
+    else if(response.status == 500) {
+        alert("error message:  Server Issue")
+    }
+    else {   
+      alert("unforseen error")
+    }
+
+  }
+
+  logoutButton.addEventListener('click', logout)
+    </script>
+  </div>
+</div>
+      
+    </div>
+  </body>
+</html>

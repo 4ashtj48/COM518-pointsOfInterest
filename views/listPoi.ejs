@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POI list</title>
+    <link
+      rel="stylesheet"
+      href="https://bootswatch.com/4/slate/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <style>
+      .col.scrollable {
+            overflow: auto;
+            max-height: 100vh;
+}   
+      .row {
+            margin: 0;
+      }
+
+      div#reviewModal.show {
+      display: block;
+}
+
+    </style>
+
+
+  </head>
+
+
+  <body>
+    <div >
+      <div class="row">
+               
+        <div class="col-8">
+          <div id="map" style="width: 100%; height: 100vh"></div>
+
+          <script>
+            const mymap = L.map("map").setView([51.505, -0.09], 13);
+            const attrib =
+              "Map data copyright OpenStreetMap contributors, Open Database Licence";
+      
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: attrib,
+            }).addTo(mymap);
+      
+          var popupPoi = L.popup();
+          function onMapClick(e) {
+              popupPoi.setLatLng(e.latlng)
+            .setContent('Adding POI '+ e.latlng.toString() +
+            `<form  id="addPoiForm"  method="POST">
+          <div class="form-group">
+          <input
+          type="text"
+          class="form-control mb-1"
+          name="name"
+          id="name"
+          placeholder="Name"
+          required/>
+          <input
+          type="text"
+          name="type"
+          id="type"
+          class="form-control mb-1"
+          placeholder="Type"
+          required/>
+          <input
+          type="text"
+          name="country"
+          id="country"
+          class="form-control mb-1"
+          placeholder="Country"
+          required/>
+          <input
+          type="text"
+          name="region"
+          id="region"
+          class="form-control mb-1"
+          placeholder="Region"
+          required/>
+          <input type="float" name="lon" id="lon" disabled
+          class="form-control mb-1" value="${e.latlng.lng}" required />
+          <input type="float" name="lat" id="lat" disabled
+          class="form-control mb-1" value="${e.latlng.lat}" required />
+          <input type="text"
+          name="description"
+          id="description"
+          class="form-control mb-1" 
+          placeholder=" Description"
+          required>
+      
+          <button class="btn btn-primary btn-block" type="submit">Submit</button>
+          </form>`).openOn(mymap); 
+          var submitForm= L.DomUtil.get("addPoiForm")
+        L.DomEvent.addListener(submitForm, "submit", addPoi)
+          }
+         
+            mymap.on("click", onMapClick);
+          
+          </script>
+    <script>
+
+
+ 
+      
+         async function addPoi(event) {
+          event.preventDefault();
+          const body = {
+              name: document.getElementById("name").value,
+              type: document.getElementById("type").value,
+              country: document.getElementById("country").value,
+              region: document.getElementById("region").value,
+              lat: document.getElementById("lat").value,
+              lon: document.getElementById("lon").value,
+              description: document.getElementById("description").value,
+            };
+            const response = await fetch("/api/poi", {
+              method: "POST", headers: { "Content-type": "application/json" },
+              body: JSON.stringify(body)
+            });
+      
+            if(response.status == 200){
+              const data = await response.json();
+              console.log(data)
+              var marker = L.marker([data.lat, data.lon]);
+
+
+            }
+           else if(response.status == 404) {
+              alert("error message: ");
+          } 
+          else if(response.status == 500) {
+              alert("error message: ")
+          }
+          else {   
+            alert("unforseen error")
+          }
+      
+        }
+        </script> 
+
+        </div>
+        <div class="col scrollable" >
+          <div class="card card-body">
+            <h1 class="text-center mb-3">
+              <i class="fas fa-user-plus"></i> search POI
+            </h1>
+         
+            <!-- app.js to using the post request from route -->
+            <form id="searchForm"  method="GET">
+              <div class="form-group">
+                <table class="table"></table>
+  
+                <label>Search input</label>
+             
+                <td class="table">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="searchInput"
+                    name="searchInput"
+                  />
+                </td>
+              <label>Search by </label>
+                <td class="table">
+                  <select id="searchBy" class="form-select" aria-label="Default select example">
+                      <option selected>Search By</option>
+                      <option value="region">Region</option>
+                      <option value="country">Country</option>
+                      <option value="type">Type</option>
+                      <option value="name">Name</option>
+                   </select>
+                </td>
+              <button type="submit" class="btn btn-primary btn-block">
+                Search
+              </button>
+            </form>
+          </div>
+          <div class="card card-body">
+              <h2 class="text-center mb-3">
+                <i class="fas fa-user-plus"></i> Search Results
+              </h2>
+              <a href="/add/" class="btn btn-primary btn-lg">Add a POI</a>
+              <div id="searchResults"></div>
+           
+              <!-- app.js to using the post request from route -->
+             
+            </div>
+        </div>
+      </div>
+       </div>
+  <!-- Modal -->
+  <div class="modal" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add Review</h5>
+          <button id="closeModal2" type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+        <form action="">
+          <textarea name="review" id="review" cols="30" rows="5"></textarea>
+          <input type="hidden" name="poi_id" id="poi_id">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="closeModal" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button id="addReview" type="button" class="btn btn-primary">Add Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <script>
+
+    var layerGroup = new L.FeatureGroup().addTo(mymap);
+        async function searchPoi(event) {
+  event.preventDefault();
+  let searchDiv = document.getElementById('searchResults')
+  searchDiv.innerHTML = '';
+  layerGroup.clearLayers();
+ 
+  let url= '/api/poi';
+  let searchInput = document.getElementById('searchInput').value;
+  let searchBy = document.getElementById('searchBy').value;
+    console.log(searchBy)
+    console.log(searchInput)
+    url = `${url}?${searchBy}=${searchInput}`
+ 
+    const response = await fetch(url);
+    if(response.status == 404) {
+        alert("POI was not found!");
+    } else {
+        const data = await response.json();
+        
+
+
+        for(i = 0; i < data.length; i++){
+            let poi=data[i];
+        
+            let poiDiv = document.createElement('div')
+            poiDiv.id = `poi-${poi.id}`;
+            poiDiv.classList.add('poi')
+            let poiName = document.createElement('h3')
+            poiName.innerText = poi.name
+            let poiDescription = document.createElement('p')
+            poiDescription.innerText = poi.description
+            let poiRecommended = document.createElement('p');
+            poiRecommended.innerText = `Recommended ${poi.recommendations} times`;
+            poiRecommended.id = `poi-rec-${poi.id}`
+            let poiLink = document.createElement('button')
+            poiLink.innerText = `Recommend ${poi.name}`
+            let poiReview = document.createElement('button')
+            poiReview.innerText = `Add a review`
+        
+            poiReview.classList.add('btn', 'btn-secondary')
+            poiLink.classList.add('btn', 'btn-primary')
+            poiLink.addEventListener('click', recommendPoi.bind(event, poi), false)
+            poiReview.addEventListener('click', openReview.bind(event, poi), false)
+
+            poiDiv.append(poiName)
+            poiDiv.append(poiDescription)
+            poiDiv.append(poiRecommended)
+            poiDiv.append(poiLink)
+            poiDiv.append(poiReview)
+            searchDiv.append(poiDiv)
+
+           
+            var marker = L.marker([poi.lat, poi.lon]);
+      
+            marker.bindPopup(poi.name + ", " + poi.description)
+            marker.addTo(layerGroup);
+    
+        }
+        //go to location
+          mymap.fitBounds(layerGroup.getBounds())
+       }
+           
+    }
+    let openReview = async function (poi, event) {
+      console.log("hi")
+      console.log(poi)
+      let reviewPopup = document.getElementById("reviewModal")
+      reviewPopup.classList.add("show")
+      let reviewHidden = document.getElementById("poi_id")
+      reviewHidden.value = poi.id
+    }
+    let closeReview = async function (){
+      let reviewPopup = document.getElementById("reviewModal")
+      reviewPopup.classList.remove("show")
+    }
+    let closeModal = document.getElementById("closeModal")
+    closeModal.addEventListener("click", closeReview)
+    let closeModal2 = document.getElementById("closeModal2")
+    closeModal2.addEventListener("click", closeReview)
+
+    let recommendPoi = async function (poi, event) {
+        
+        const dataToUpdate = {
+            recommendations: true
+        }
+        
+    const response = await fetch(`/api/poi/${poi.id}`, { method: "PUT", headers: {
+        'Content-Type' : 'application/json'
+    }, body: JSON.stringify(dataToUpdate)});
+    if(response.status == 404) {
+        alert("error message: 404 not found");
+    } 
+    else if(response.status == 500) {
+      alert("error message: 500 Internal Server error ")
+    }
+    else {   
+        const data = await response.json();
+        console.log(data)
+        let recText = document.getElementById(`poi-rec-${poi.id}`)
+        recText.innerText = `Recommended ${data.recommendations} times`
+    }
+}
+    const form = document.getElementById('searchForm');
+    form.addEventListener('submit', searchPoi);
+
+    
+
+const saveReview = document.getElementById('addReview');
+    saveReview.addEventListener('click', addReview);
+
+   async function addReview(event) {
+    event.preventDefault();
+    const body = {
+       poi_id : Number (document.getElementById("poi_id").value),
+       review: document.getElementById("review").value,
+        
+      };
+      const response = await fetch("/api/reviews", {
+        method: "POST", headers: { "Content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if(response.status == 200){
+        const data = await response.json();
+        console.log(data)
+        alert("created Review successfully " )
+        closeReview();
+      }
+     else if(response.status == 404) {
+        alert("error message: 404 not found");
+    } 
+    else if(response.status == 500) {
+        alert("error message: 500 Internal Server error ")
+    }
+    else {   
+      alert("unforseen error")
+    }
+
+  }
+
+    </script>
+
+  </body>
+</html>

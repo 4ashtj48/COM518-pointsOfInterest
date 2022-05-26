@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>add POI</title>
+    <link
+      rel="stylesheet"
+      href="https://bootswatch.com/4/slate/bootstrap.min.css"
+    />
+  </head>
+<body>
+        <div class="container" style="padding: 20px">
+      <div class="col-md-6 m-auto">
+        <div class="card card-body">
+          <h1 class="text-center mb-3">
+            <i class="fas fa-user-plus"></i> Adding POI
+          </h1>
+       
+          <!-- app.js to using the post request from route -->
+          <form id="addPoiForm"  method="POST">
+            <div class="form-group">
+              <table class="table"></table>
+
+              <label>ADD POI fields</label>
+           
+              <input type="text"
+              name="name" id="name" placeholder="Name"  class="form-control my-1" required>
+              <input type="text"
+              name="type" id="type" placeholder="Type"  class="form-control my-1" required>
+              <input type="text"
+              name="country" id="country" placeholder="Country"  class="form-control my-1" required>
+              <input type="text"
+              name="region" id="region" placeholder="Region"  class="form-control my-1" required>
+              <label>Longitude & Latitude</label>
+              <input type="number" step="0.01"
+              name="lon" id="lon" class="form-control my-1" required>
+              <input type="number" step="0.01"
+              name="lat" id="lat"   class="form-control my-1" required>
+              <!--description-->
+              <input type="text"
+              name="description" id="description" placeholder="Description"  class="form-control my-1" required>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              Add POI
+            </button>
+          </form>
+        </div>
+       </div>
+    </div>
+    
+  </body>
+  <script>
+
+
+const form = document.getElementById('addPoiForm');
+    form.addEventListener('submit', addPoi);
+
+   async function addPoi(event) {
+    event.preventDefault();
+    const body = {
+        name: document.getElementById("name").value,
+        type: document.getElementById("type").value,
+        country: document.getElementById("country").value,
+        region: document.getElementById("region").value,
+        lat: document.getElementById("lat").value,
+        lon: document.getElementById("lon").value,
+        description: document.getElementById("description").value,
+      };
+      const response = await fetch("/api/poi", {
+        method: "POST", headers: { "Content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if(response.status == 200){
+        const data = await response.json();
+        console.log(data)
+        alert("created POI successfully " + data.name)
+        location.reload();
+      }
+     else if(response.status == 404) {
+        alert("error message: API issue ");
+    } 
+    else if(response.status == 500) {
+        alert("error message:  Server Issue")
+    }
+    else {   
+      alert("unforseen error")
+    }
+
+  }
+  </script> 
+</html>
